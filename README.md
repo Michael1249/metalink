@@ -11,14 +11,14 @@ metalink provide three classes:
 - lnk::System
 
 They are used to describe relations between modules.
-Modules here are basic parts of a system, 
-each module can provide or request some number of iterfaces, which it depends on.
+Modules are basic parts of a system, 
+each module can provide or request some number of interfaces, which it depends on.
 System agregate and own modules, link them together and provide external access to them and their interfaces.
 
 ### Example
 
 Here is basic example of metalink usage.
-Imagine we have three Interfaces, three Implementations of these interfaces
+Imagine we have three interfaces, three implementations of these interfaces
 and three modules which will agregate some of implementations, provide their interfaces 
 and request interfaces of other modules.
 
@@ -83,6 +83,7 @@ struct Module1
     void foo()
     {
         std::cout << "Access IA from Module1 - " << access<IA>().a();
+        // std::cout << "Access IB from Module1 - " << access<IB>().b(); - compile error, IB not available
     }
 
     void bar()
