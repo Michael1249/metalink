@@ -1,5 +1,6 @@
 # metalink
-C++ template based util to easy link objects in runtime  
+C++ template based util to easy link objects in runtime 
+*(require standart c++17, c++20)*
 
 ### Description
 
@@ -10,7 +11,7 @@ metalink provide three classes:
 - lnk::System
 
 They are used to describe relations between modules.
-Modules here is basic parts of a system, 
+Modules here are basic parts of a system, 
 each module can provide or request some number of iterfaces, which it depends on.
 System agregate and own modules, link them together and provide external access to them and their interfaces.
 
