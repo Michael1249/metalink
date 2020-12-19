@@ -1,6 +1,9 @@
 #ifndef __METALINK_H__
 #define __METALINK_H__
 
+#include <tuple>
+#include <type_traits>
+
 namespace lnk::details {
 
 template<class ... Modules>
@@ -15,12 +18,12 @@ class InterfaceAccesor;
 
 template<class T1, class... Ts>
 constexpr bool is_one_of() {
-    return std::disjunction_v<std::is_same<T1, Ts>...>;
+    return (std::is_same<T1, Ts>::value || ...);
 }
 
 template<class T1, class... Ts>
 constexpr bool is_inherit_all() {
-    return std::conjunction_v<std::is_base_of<Ts, T1>...>;
+    return (std::is_base_of<Ts, T1>::value && ...);
 } 
 
 template<bool C, class T1, class T2>
@@ -42,7 +45,7 @@ class InterfaceAccesor: InterfaceAccesorLabel {
     static_assert(sizeof...(Interfaces) > 0, "No interfaces requested!");
 
     template<class T1, class ... Ts, class T2>
-    friend void makeLink(T1&& provider, T2&& accesor);
+    friend void makeLink(T1& provider, T2& accesor);
     
     public:
 
@@ -56,7 +59,7 @@ class InterfaceAccesor: InterfaceAccesorLabel {
     private:
 
     template<class T>
-    inline void linkTo(T&& p) { m_provider = static_cast<System*>(&p); } //compiler can't resolve System, use T and static_cast.
+    inline void linkTo(T& p) { m_provider = static_cast<System*>(&p); } //compiler can't resolve System, use T and static_cast.
 
     System* m_provider;
 };
@@ -94,9 +97,9 @@ struct resolveProvider_impl<Interface, CurrentProvider> {
 };
 
 template<class Provider, class ... Interfaces, class Accesor = InterfaceAccesor<Provider, Interfaces...>>
-inline void makeLink(Provider&& provider, Accesor&& accesor)
+inline void makeLink(Provider& provider, Accesor& accesor)
 {
-    accesor.linkTo(std::forward<Provider>(provider));
+    accesor.linkTo(provider);
 }
 
 template<class ... Ts>
@@ -106,9 +109,9 @@ struct AccessorsList
     using next = AccessorsList<Ts ..., T>;
 
     template<class Provider, class Tuple>
-    inline static void makeLinksTo(Provider&& provider, Tuple&& tuple)
+    inline static void makeLinksTo(Provider& provider, Tuple& tuple)
     {
-        (makeLink(std::forward<Provider>(provider), std::get<Ts>(std::forward<Tuple>(tuple))),...);
+        (makeLink(provider, std::get<Ts>(tuple)),...);
     }
     
 };
@@ -127,7 +130,7 @@ struct ProvidersList
     using next = ProvidersList<Ts ..., T>;
 
     template<class Interface>
-    using resolveProvider = typename resolveProvider_impl<Interface, Ts...>;
+    using resolveProvider = resolveProvider_impl<Interface, Ts...>;
     
 };
 
@@ -141,13 +144,13 @@ struct ProvidersList<>
 template<class ListA, class ListP, class T, class ... Ts>
 struct filterModules_impl {
     using accessors = typename filterModules_impl<typename alternative<
-        std::is_base_of_v<InterfaceAccesorLabel, T>,
+        std::is_base_of<InterfaceAccesorLabel, T>::value,
         typename ListA::template next<T>, 
         ListA
     >::type, ListP,  Ts ...>::accessors;
 
     using providers = typename filterModules_impl<ListA, typename alternative<
-        std::is_base_of_v<InterfaceProviderLabel, T>,
+        std::is_base_of<InterfaceProviderLabel, T>::value,
         typename ListP::template next<T>, 
         ListP
     >::type, Ts ...>::providers;
@@ -156,13 +159,13 @@ struct filterModules_impl {
 template<class ListA, class ListP, class T>
 struct filterModules_impl<ListA, ListP, T> {
     using accessors = typename alternative<
-        std::is_base_of_v<InterfaceAccesorLabel, T>,
+        std::is_base_of<InterfaceAccesorLabel, T>::value,
         typename ListA::template next<T>, 
         ListA
     >::type; 
 
     using providers = typename alternative<
-        std::is_base_of_v<InterfaceProviderLabel, T>,
+        std::is_base_of<InterfaceProviderLabel, T>::value,
         typename ListP::template next<T>, 
         ListP
     >::type; 
