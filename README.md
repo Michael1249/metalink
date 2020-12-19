@@ -75,7 +75,8 @@ struct Module1
 {
     Module1() // Modules must have default constructor
     {
-        //std::cout << access<IA>().a(); - runtime error, modules not linked. No access in module constructor
+        //std::cout << access<IA>().a(); - runtime error, modules not linked
+        // No access in module constructor
     }
 
     void foo()
